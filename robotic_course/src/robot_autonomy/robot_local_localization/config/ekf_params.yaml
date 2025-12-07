@@ -1,0 +1,14 @@
+ekf_node:
+  ros__parameters:
+    wheel_radius: 0.1
+    wheel_separation: 0.45
+    motion_topic: "/motion_model"
+    measurement_topic: "/measurement"
+    ekf_topic: "/ekf_odometry"
+    odom_frame: "odom"
+    base_frame: "base_link"
+    q_noise: [0.05, 0.05, 0.05]
+    r_noise: [0.1, 0.1, 0.05]
+    p0: [0.05, 0.05, 0.02]
+    log_csv: "/home/saam/courses/robotics/hw/robotic_course/report/csvs/ekf.csv"
+
