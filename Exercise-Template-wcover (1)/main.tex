@@ -8,11 +8,18 @@
 \usepackage{listings}
 \usepackage{graphicx,subfigure,wrapfig}
 \usepackage{multirow}
+\usepackage{amsmath,amssymb}
 %\usepackage{multicol}
 
 \usepackage[margin=20mm]{geometry}
 \usepackage{xepersian}
-\settextfont{XB Niloofar}
+\IfFontExistsTF{XB Niloofar}{\settextfont{XB Niloofar}}{
+  \IfFontExistsTF{Amiri}{\settextfont{Amiri}}{\settextfont{Noto Naskh Arabic}}
+}
+\IfFontExistsTF{DejaVu Sans}{\setlatintextfont{DejaVu Sans}}{\setlatintextfont{Arial}}
+\setlength{\emergencystretch}{3em}
+\sloppy
+\graphicspath{{../robotic_course/report/figures/}}
 
 \newcommand{\class}{فناوریهای رباتیک و خودمختاری}
 \newcommand{\term}{پاییز ۱۴۰۴}
@@ -76,36 +83,36 @@ showstringspaces=false}
 \begin{questions}
 \pointpoints{نمره}{نمره}
 
-\question[20]
-مدل حرکتی ربات چهارچرخ اسکید استیرینگ را برای حالت سرعت خطی یکنواخت در هر سمت به دست آورید. حالت را $x_k=[x~~y~~\theta]^T$ و ورودی را سرعت خطی $v_x$ و سرعت زاویه‌ای $w_z$ فرض کنید. فاصله میان دو چرخ $w$ و شعاع چرخ $r$ است. \\
-روی هر سمت سرعت خطی چرخ‌ها $\nu_r=v_x+\frac{w}{2}w_z$ و $\nu_l=v_x-\frac{w}{2}w_z$ می‌شود؛ سرعت زاویه‌ای چرخ‌ها $\omega_r=\nu_r/r$ و $\omega_l=\nu_l/r$ و برحسب RPM داریم $\text{rpm}_{r,l}=\dfrac{60}{2\pi}\omega_{r,l}$. \\
-پیش‌بینی حالت با انتگرال اویلر: 
+\question
+مدل حرکت از دید دانشجو: ربات چهارچرخ اسکید-استیر با حالت $x_k=[x~~y~~\theta]^T$ و ورودی $u_k=[v_x~~w_z]^T$ کار می‌کند. روابط سرعت چرخ‌ها:
 \[
-x_{k+1}=x_k+v_x\cos(\theta_k)\Delta t,\qquad
-y_{k+1}=y_k+v_x\sin(\theta_k)\Delta t,\qquad
-\theta_{k+1}=\theta_k+w_z\Delta t
+\nu_r=v_x+\tfrac{w}{2}w_z,\quad \nu_l=v_x-\tfrac{w}{2}w_z,\quad
+\omega_{r,l}=\nu_{r,l}/r,\quad
+\text{rpm}_{r,l}=\tfrac{60}{2\pi}\omega_{r,l}
 \]
-در صورت لغزش ناچیز از همین مدل استفاده می‌کنیم؛ اگر لغزش زیاد بود می‌توان ضریب میرایی $\alpha$ روی $v_x$ گذاشت تا کمی تصحیح شود (برای من کترلر واقعی مفید است).
-
-\question[15]
-مدل اندازه‌گیری با RGB-D و IMU: بردار اندازه‌گیری $z_k=[\Delta x_{vo},\Delta y_{vo},\theta_{imu}]^T$ است. خروجی VO در دستگاه بدنه است، پس
+گسسته‌سازی اویلر:
 \[
-\begin{bmatrix}
-\Delta x\\ \Delta y
-\end{bmatrix}
-=
-\begin{bmatrix}
-\cos\theta_k & -\sin\theta_k\\
-\sin\theta_k & \cos\theta_k
-\end{bmatrix}
-\begin{bmatrix}
-\Delta x_{vo}\\ \Delta y_{vo}
-\end{bmatrix}
+x_{k+1}=x_k+v_x\cos\theta_k\,\Delta t,\;
+y_{k+1}=y_k+v_x\sin\theta_k\,\Delta t,\;
+\theta_{k+1}=\theta_k+w_z\,\Delta t
 \]
-و در EKF از $h(x_k)=\begin{bmatrix}x_k\\y_k\\\theta_k\end{bmatrix}$ استفاده می‌کنیم. ماتریس اندازه‌گیری برای این حالت $H_k=I_{3\times3}$ است. نوییز IMU را با $R_\theta=\sigma_\theta^2$ و VO را با $R_{xy}$ در ماتریس $R$ می‌گذاریم (کمی هم به عمد فراموشی بنویسید).
+اگر لغزش بود با ضریب $\alpha<1$ روی $v_x$ کمی میرایی می‌گذاریم تا پیش‌بینی به واقعیت نزدیک‌تر شود.
 
-\question[20]
-طراحی EKF: حالت همان $[x,y,\theta]^T$ و ورودی $\mathbf{u}_k=[v_x,w_z]^T$. تابع گذار
+\question
+مدل اندازه‌گیری: VO دلتاهای مکانی می‌دهد و IMU زاویه. بردار سنجش
+\[
+z_k=\begin{bmatrix}\Delta x_{vo}\\ \Delta y_{vo}\\ \theta_{imu}\end{bmatrix}
+\]
+برای تبدیل دلتاها از فریم بدنه به جهانی:
+\[
+\begin{bmatrix}\Delta x\\ \Delta y\end{bmatrix}=
+\begin{bmatrix}\cos\theta_k & -\sin\theta_k\\ \sin\theta_k & \cos\theta_k\end{bmatrix}
+\begin{bmatrix}\Delta x_{vo}\\ \Delta y_{vo}\end{bmatrix}
+\]
+در EKF تابع سنجش $h(x)=[x~~y~~\theta]^T$ و $H_k=I$ است. نویز VO را در $R_{xy}$ و نویز IMU را در $R_\theta$ می‌گذاریم.
+
+\question
+فیلتر EKF: حالت $[x,y,\theta]^T$ و ورودی $[v_x,w_z]^T$.
 \[
 f(x_k,u_k)=
 \begin{bmatrix}
@@ -114,15 +121,14 @@ y_k+v_x\sin\theta_k\Delta t\\
 \theta_k+w_z\Delta t
 \end{bmatrix}
 \]
-ژاکوبیان حالت:
+ژاکوبیان‌ها:
 \[
 F_k=
 \begin{bmatrix}
 1 & 0 & -v_x\Delta t\sin\theta_k\\
 0 & 1 &  v_x\Delta t\cos\theta_k\\
 0 & 0 & 1
-\end{bmatrix},
-\qquad
+\end{bmatrix},\quad
 L_k=
 \begin{bmatrix}
 \cos\theta_k\Delta t & 0\\
@@ -130,67 +136,51 @@ L_k=
 0 & \Delta t
 \end{bmatrix}
 \]
-که $L_k$ برای وارد کردن نویز ورودی است و $Q=L_k\,\Sigma_u\,L_k^T$. پیش‌بینی:
+$Q=L_k\,\Sigma_u\,L_k^T$ و $P_0=\text{diag}(0.05^2,0.05^2,0.02^2)$. پیش‌بینی و به‌روزرسانی:
 \[
-\hat x_k^- = f(\hat x_{k-1},u_{k-1}),\qquad
+\hat x_k^- = f(\hat x_{k-1},u_{k-1}),\quad
 P_k^- = F_k P_{k-1} F_k^T + Q
 \]
-به‌روزرسانی با $H_k=I$:
 \[
-K_k=P_k^-H_k^T(H_kP_k^-H_k^T+R)^{-1},\quad
-\hat x_k=\hat x_k^-+K_k(z_k-h(\hat x_k^-)),\quad
+K_k=P_k^-H_k^T(H_kP_k^-H_k^T+R)^{-1},\;
+\hat x_k=\hat x_k^-+K_k(z_k-h(\hat x_k^-)),\;
 P_k=(I-K_kH_k)P_k^-
 \]
-برای شروع از $P_0=\text{diag}(0.05^2,0.05^2,0.02^2)$ استفاده شد تا همگرا نشود دیر.
 
-\question[45]
-گام‌های پیاده‌سازی در ROS2 و گازیبو (سورس \verb|/home/saam/courses/robotics/hw/robotic_course| کپی شده):
-\begin{parts}
-\part[6]
-بسته TA همین‌جاست: \verb|/home/saam/courses/robotics/hw/robotic_course| (از گیت کپی شد). اگر می‌خواهید جدا بسازید: \verb|mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src && ln -s /home/saam/courses/robotics/hw/robotic_course .| سپس \verb|cd ~/ros2_ws && colcon build --symlink-install|.
-\part[5]
-در \verb|robot_description/src/description/robot.urdf| نویز IMU را با این بلاک بگذارید (اگر نیست):
-\begin{latin}
-\begin{lstlisting}[language=XML]
-<noise type="gaussian">
-  <mean>0.0</mean>
-  <stddev>0.002</stddev>
-</noise>
-\end{lstlisting}
-\end{latin}
-اگه stddev بزرگ شد مسیر را کمی کم کنید.
-\part[6]
-نود C++ کنترلر: در \verb|robot_description/scripts/motor_command.cpp| اسکلت هست؛ \verb|cmd_vel| را مشترک شود و با روابط $\omega_{r,l}=\frac{2v_x\pm w w_z}{2r}$ RPM بدهد. پیام خروجی می‌تواند \verb|std_msgs/Float64MultiArray| به کنترلر مشترک موتور باشد. تایم‌استمپ را هم ست کنید چون بعضی وقت‌ها rviz حساسه.
-\part[6]
-در \verb|src| پوشه \verb|robot_autonomy| بسازید (کنار همین پکیج یا داخل workspace) و پکیج \verb|robot_local_localization| ایجاد کنید:
+\question
+پیاده‌سازی و تجربه کار:
+\begin{itemize}
+\item سورس آماده در \verb|robotic_course| است. اگر workspace جدا می‌خواهید:
 \begin{latin}
 \begin{lstlisting}[language=bash]
-cd src/robot_autonomy
-ros2 pkg create robot_local_localization --build-type ament_python
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+ln -s /home/saam/courses/robotics/hw/robotic_course .
+cd ~/ros2_ws && colcon build --symlink-install
 \end{lstlisting}
 \end{latin}
-فایل \verb|prediction_node.py|: پارامترهای \verb|wheel_seperation|, \verb|wheel_radius|, \verb|cmd_vel_topic| را بگیرید، ورودی \verb|cmd_vel| را انتگرال بگیرید و پیام \verb|motion_model| (مثلا \verb|geometry_msgs/Twist| یا پیام اختصاصی) منتشر کنید. یه تایپو کوچیک مثل \verb|seperation| نگه دارید.
-\part[6]
-\verb|measurement_node.py|: مشترک \verb|/zed/zed_node/imu/data| و \verb|/vo/odom| (یا \verb|/odom| اگر VO شما همان است) شود، زاویه را از کواترنیون به $\theta$ تبدیل کند، دلتاهای VO را با ماتریس دوران تبدیل و بردار $z_k$ را منتشر کند. برای کاهش نوییز می‌توانید فیلتر میانگین لغزان ۵ نمونه‌ای بگذارید.
-\part[8]
-\verb|ekf_node.py|: مشترک \verb|motion_model| و \verb|measurement_model|، گام‌های EKF بالا را اجرا کند، خروجی \verb|nav_msgs/Odometry| بدهد و یک \verb|tf2_ros::TransformBroadcaster| (یا در پایتون) برای \verb|odom->base_link| بفرستد. ماتریس‌های $Q$ و $R$ را پارامتری کنید.
-\part[5]
-\verb|test_node.py|: یک مربع با طول 2m را با دنباله \verb|cmd_vel| برود (حرکت مستقیم 2s، پیچ $90^\circ$ و تکرار). \verb|nav_msgs/Path| چهار مسیر (واقعی، اندازه‌گیری، مدل حرکتی، ekf) را در تاپیک‌های جدا منتشر کنید تا در rviz ببینید. من یه بار اسم تاپیک را غلطی گذاشتم \verb|/pfath| که بد نبود.
-\part[3]
-گام بونوس: با \verb|ros2 bag record /ekf/odom /ground_truth /vo/odom /imu| داده بگیرید، در \verb|lichtblick| یا \verb|foxglove| لود کنید و نمودارهای $x,y,\theta$ را مقایسه کنید.
-\end{parts}
+\item URDF: دو موتور مستقل با تاپیک‌های RPM و نویز IMU (stddev=0.002) افزوده شد.
+\item نود C++ \verb|cmd_vel_to_motor| در \verb|robot_description/scripts/motor_command.cpp| ورودی \verb|cmd_vel| را به RPM هر چرخ می‌فرستد.
+\item پکیج پایتون \verb|robot_local_localization| شامل:
+  \begin{itemize}
+  \item \verb|prediction_node.py| انتگرال حرکت و انتشار \verb|motion_model|
+  \item \verb|measurement_node.py| ادغام IMU+VO و ساخت $z_k$
+  \item \verb|ekf_node.py| اجرای EKF و انتشار \verb|ekf_odometry| و \verb|tf|
+  \item \verb|test_node.py| حرکت مربع ۲ متری و انتشار چهار \verb|nav_msgs/Path|
+  \end{itemize}
+\item لانچ \verb|gazebo.launch.py| گازیبو، پل ROS-GZ، VO، نود موتور و EKF را بالا می‌آورد.
+\item اجرای یکجای همه مراحل: \verb|bash hw2_run_all.sh|
+\end{itemize}
 
-\question[20]
-نتایج اجرای شبیه‌سازی و نمودارها:
+\question
+نتایج شبیه‌سازی:
 \begin{itemize}
-\item RMSE مسیر: مدل حرکتی $0.028$، اندازه‌گیری $0.073$، EKF $0.021$ (مقدارها از \verb|report/status.txt| خوانده شد).
+\item RMSE مسیرها: مدل حرکتی $0.028$، اندازه‌گیری $0.073$، EKF $0.021$ (از \verb|report/status.txt|).
 \item مسیرها (چهار خط رنگی): \\ 
-\includegraphics[width=0.72\textwidth]{../robotic_course/report/figures/trajectory.png}
+\includegraphics[width=0.72\textwidth]{trajectory.png}
 \item خطای مکانی برحسب زمان: \\ 
-\includegraphics[width=0.72\textwidth]{../robotic_course/report/figures/error.png}
+\includegraphics[width=0.72\textwidth]{error.png}
 \item زاویه $\theta$ در طول زمان: \\ 
-\includegraphics[width=0.72\textwidth]{../robotic_course/report/figures/theta.png}
-\item اجرای خودکار: \verb|bash hw2_run_all.sh| (در ریشه تکلیف).
+\includegraphics[width=0.72\textwidth]{theta.png}
 \end{itemize}
 
 \end{questions}
