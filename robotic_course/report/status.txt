@@ -1,0 +1,4 @@
+RMSE_motion=0.0284
+RMSE_measurement=0.0726
+RMSE_ekf=0.0207
+Figures: /home/saam/courses/robotics/hw/robotic_course/report/figures
